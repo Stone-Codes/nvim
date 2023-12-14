@@ -39,6 +39,6 @@ return {
         -- add any options here
     },
     lazy = false,
-  }
-
+  },
+  {'github/copilot.vim'},
 }

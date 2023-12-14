@@ -10,5 +10,5 @@ require('Comment').setup({
         line = '<leader>/',
     --     ---Block-comment keymap for VISUAL mode
         block = '<leader>?',  -- Optional: Set a different keybind for block comments in visual mode
-    -- },
+     },
 })

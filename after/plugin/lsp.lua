@@ -11,12 +11,6 @@ require('mason-lspconfig').setup({
     lsp.default_setup,
   },
 })
---
--- lsp.format_on_save({
---   servers = {
---     ['gopls'] = {'go'},
---   }
--- })
 
 local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
 local lsp_format_on_save = function(bufnr)
@@ -68,7 +62,6 @@ lsp.set_preferences({
 
 lsp.on_attach(function(client, bufnr)
   local opts = { buffer = bufnr, remap = false }
-  print("on_attach")
   lsp_format_on_save(bufnr)
 
   vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, opts)

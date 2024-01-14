@@ -2,15 +2,52 @@ local lsp = require("lsp-zero")
 
 lsp.preset("recommended")
 
+require('lspconfig').efm.setup {
+  root_dir = require('lspconfig/util').root_pattern(".git", "pnpm-workspace.yml"),
+}
+
 require('mason').setup({})
 require('mason-lspconfig').setup({
   -- Replace the language servers listed here
   -- with the ones you want to install
-  ensure_installed = { 'tsserver', 'lua_ls', 'eslint', 'svelte', 'tailwindcss', 'gopls', 'templ', 'black' },
-  handlers = {
-    lsp.default_setup,
-  },
+  ensure_installed = { 'efm', 'tsserver', 'lua_ls', 'svelte', 'tailwindcss', 'gopls', 'templ', 'jedi_language_server', 'jsonls' },
+  -- handlers = {
+  --   lsp.default_setup,
+  -- },
 })
+
+require("mason-lspconfig").setup_handlers {
+  -- The first entry (without a key) will be the default handler
+  -- and will be called for each installed server that doesn't have
+  -- a dedicated handler.
+  function(server_name) -- default handler (optional)
+    require("lspconfig")[server_name].setup {}
+  end,
+  -- Next, you can provide a dedicated handler for specific servers.
+  -- For example, a handler override for the `rust_analyzer`:
+  ["tailwindcss"] = function()
+    require("lspconfig").tailwindcss.setup {
+      root_dir = require("lspconfig").util.root_pattern("tailwind.config.js"),
+    }
+  end
+
+}
+
+
+-- require("mason-lspconfig").setup_handlers {
+--   -- The first entry (without a key) will be the default handler
+--   -- and will be called for each installed server that doesn't have
+--   -- a dedicated handler.
+--   function(server_name)        -- default handler (optional)
+--     require("lspconfig")[server_name].setup {}
+--   end,
+--   -- Next, you can provide a dedicated handler for specific servers.
+--   -- For example, a handler override for the `rust_analyzer`:
+--   ["eslint"] = function()
+--     require("eslint").setup({
+--     })
+--   end
+-- }
 
 local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
 local lsp_format_on_save = function(bufnr)
@@ -62,6 +99,10 @@ lsp.set_preferences({
 
 lsp.on_attach(function(client, bufnr)
   local opts = { buffer = bufnr, remap = false }
+
+  client.server_capabilities.documentFormattingProvider = true
+
+
   lsp_format_on_save(bufnr)
 
   vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, opts)

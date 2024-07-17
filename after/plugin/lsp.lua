@@ -10,7 +10,7 @@ require('mason').setup({})
 require('mason-lspconfig').setup({
   -- Replace the language servers listed here
   -- with the ones you want to install
-  ensure_installed = { 'efm', 'tsserver', 'lua_ls', 'svelte', 'tailwindcss', 'gopls', 'templ', 'jedi_language_server', 'jsonls' },
+  ensure_installed = { 'efm', 'tsserver', 'lua_ls', 'svelte', 'tailwindcss', 'gopls', 'templ', 'pyright', 'jsonls' },
   -- handlers = {
   --   lsp.default_setup,
   -- },
@@ -28,7 +28,21 @@ require("mason-lspconfig").setup_handlers {
   ["tailwindcss"] = function()
     require("lspconfig").tailwindcss.setup {
       root_dir = require("lspconfig").util.root_pattern("tailwind.config.js"),
+      lint = {
+        unknownAtRules = "ignore",
+      },
     }
+  end,
+  ["svelte"] = function()
+    require("lspconfig").svelte.setup {
+      on_attach = function(client)
+        vim.api.nvim_create_autocmd("BufWritePost", {
+          pattern = { "*.js", "*.ts" },
+          callback = function(ctx)
+            client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.file })
+          end,
+        })
+      end }
   end
 
 }
@@ -60,6 +74,19 @@ local lsp_format_on_save = function(bufnr)
     end,
   })
 end
+
+local autocmd_group = vim.api.nvim_create_augroup("Custom auto-commands", { clear = true })
+vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+  pattern = { "*.py" },
+  desc = "Auto-format Python files after saving",
+  callback = function()
+    local fileName = vim.api.nvim_buf_get_name(0)
+    vim.cmd(":silent !black --preview -q " .. fileName)
+    vim.cmd(":silent !isort --profile black --float-to-top -q " .. fileName)
+    vim.cmd(":silent !docformatter --in-place --black " .. fileName)
+  end,
+  group = autocmd_group,
+})
 
 
 local cmp = require('cmp')
